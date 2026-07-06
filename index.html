@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>제빵사 살인사건 : 밀가루 암호</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -13,81 +13,41 @@
             background-color: #08080c;
             color: #f3f4f6;
             overflow-x: hidden;
-            user-select: none;
+            touch-action: manipulation; /* 모바일 줌 방지 및 터치 최적화 */
         }
 
-        .csi-font {
-            font-family: 'Courier Prime', monospace;
-        }
+        .csi-font { font-family: 'Courier Prime', monospace; }
 
-        /* 경고 폴리스라인 노란 테이프 효과 */
         .yellow-tape {
-            background: repeating-linear-gradient(
-                -45deg,
-                #fbbf24,
-                #fbbf24 15px,
-                #111827 15px,
-                #111827 30px
-            );
+            background: repeating-linear-gradient(-45deg, #fbbf24, #fbbf24 15px, #111827 15px, #111827 30px);
         }
 
-        /* 펄스 애니메이션 */
         @keyframes pulse-yellow {
-            0%, 100% { border-color: #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.4); }
-            50% { border-color: #f59e0b; box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); }
+            0%, 100__% { border-color: #eab308; box-shadow: 0 0 5px rgba(234, 179, 8, 0.3); }
+            50__% { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
         }
-        .pulse-border {
-            animation: pulse-yellow 2.5s infinite;
-        }
-
-        /* 레이저 스캔 효과 */
-        @keyframes scan {
-            0% { top: 0%; }
-            50% { top: 100%; }
-            100% { top: 0%; }
-        }
-        .laser-line {
-            animation: scan 4s linear infinite;
+        
+        /* 모바일 선택 카드 테두리 깜빡임 */
+        .selected-card {
+            border-color: #fbbf24 !important;
+            background-color: rgba(251, 191, 36, 0.15) !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+            transform: scale(1.02);
         }
 
-        .click-bounce:active {
-            transform: scale(0.95);
-            transition: transform 0.1s;
-        }
+        .click-bounce:active { transform: scale(0.95); transition: transform 0.1s; }
+        .blur-text { filter: blur(4px); transition: filter 1.2s ease-in-out; }
+        
+        .drop-zone { transition: all 0.2s ease; cursor: pointer; }
+        .drop-zone:hover { border-color: #fbbf24; }
+        .drop-zone:active { background-color: rgba(255, 255, 255, 0.05); }
 
-        /* 블러 효과 전환 */
-        .blur-text {
-            filter: blur(4px);
-            transition: filter 1.2s ease-in-out;
-        }
-        .blur-text:hover {
-            filter: blur(1px);
-        }
-
-        /* 드래그앤드롭 스타일링 */
-        .drag-item {
-            cursor: grab;
-            transition: transform 0.15s, box-shadow 0.15s, border-color 0.2s;
-        }
-        .drag-item:active {
-            cursor: grabbing;
-            transform: scale(1.05);
-        }
-        .drop-zone {
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .drop-zone.drag-over {
-            background-color: rgba(251, 191, 36, 0.15);
-            border-color: #fbbf24;
-        }
-
-        /* 스크롤바 숨기기 (깔끔한 UI) */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #08080c; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
+<body class="min-h-screen flex flex-col">
 
     <!-- Web Audio API 무설치 효과음 생성 스크립트 -->
     <script>
@@ -98,29 +58,24 @@
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.type = 'sine'; osc.frequency.setValueAtTime(500, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.08);
-            gain.gain.setValueAtTime(0.12, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         }
         function playSuccessSound() {
             initAudio(); if (!audioCtx) return;
             const now = audioCtx.currentTime;
             [523.25, 659.25].forEach((f, i) => {
-                const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-                osc.connect(g); g.connect(audioCtx.destination);
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(f, now + i * 0.08);
-                g.gain.setValueAtTime(0.15, now + i * 0.08); g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.2);
-                osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.2);
+                const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+                o.connect(g); g.connect(audioCtx.destination); o.type = 'triangle';
+                o.frequency.setValueAtTime(f, now + i * 0.1); g.gain.setValueAtTime(0.1, now + i * 0.1);
+                o.start(now + i * 0.1); o.stop(now + i * 0.1 + 0.2);
             });
         }
         function playFailSound() {
             initAudio(); if (!audioCtx) return;
-            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-            osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.25);
-            g.gain.setValueAtTime(0.1, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination); o.type = 'sawtooth';
+            o.frequency.setValueAtTime(150, audioCtx.currentTime); g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            o.start(); o.stop(audioCtx.currentTime + 0.2);
         }
         function playPoliceSirenLoop() {
             initAudio(); if (!audioCtx) return;
@@ -137,13 +92,13 @@
 
     <!-- Header Section -->
     <header class="border-b border-yellow-500/30 bg-black/90 sticky top-0 z-50">
-        <div class="h-2.5 yellow-tape w-full"></div>
-        <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
+        <div class="h-2 yellow-tape w-full"></div>
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <span class="bg-yellow-500 text-black font-extrabold px-2.5 py-0.5 text-xs rounded tracking-widest uppercase csi-font">CSI: INVESTIGATION</span>
-                <h1 class="text-lg md:text-xl font-black text-white tracking-tight">제빵사 살인사건 <span class="text-yellow-400 font-normal text-sm md:text-base ml-1">| 밀가루 암호</span></h1>
+                <span class="bg-yellow-500 text-black font-black px-2 py-0.5 text-[10px] rounded tracking-tighter csi-font">CSI</span>
+                <h1 class="text-base md:text-lg font-black text-white">제빵사 살인사건</h1>
             </div>
-            <div class="text-xs text-zinc-500 font-mono tracking-widest hidden sm:block">DEPT OF FORENSIC SCIENCE</div>
+            <div id="score-display" class="text-xs font-mono text-yellow-400">0 / 12 분석 완료</div>
         </div>
     </header>
 
@@ -182,9 +137,9 @@
                 <p class="text-zinc-400 text-sm mt-1">네 명의 용의자 카드를 정밀 대조하세요. (이미지를 클릭하면 확대됩니다.)</p>
             </div>
             <div onclick="openImageZoom('https://lh3.googleusercontent.com/d/1ak6_RaxqA1ivO_F3Q0-DPHuJBVHNRZLs')" class="max-w-4xl mx-auto mb-8 bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl p-2 cursor-zoom-in group relative">
-                <img src="https://lh3.googleusercontent.com/d/1ak6_RaxqA1ivO_F3Q0-DPHuJBVHNRZLs" alt="용의자 조사" class="w-full h-full object-contain opacity-90 transition-transform group-hover:scale-[1.02]">
-                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                    <span class="bg-black/80 text-yellow-400 px-4 py-2 rounded-full text-sm font-bold border border-yellow-500/50">🔍 크게 보기</span>
+                <img src="https://lh3.googleusercontent.com/d/1ak6_RaxqA1ivO_F3Q0-DPHuJBVHNRZLs" alt="용의자 조사" class="w-full h-auto rounded-lg">
+                <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="bg-black/80 text-yellow-400 px-4 py-2 rounded-full text-xs font-bold border border-yellow-500/50">🔍 크게 보기</span>
                 </div>
             </div>
             <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 max-w-4xl mx-auto">
@@ -193,224 +148,159 @@
             </div>
         </section>
 
-        <!-- CHAPTER 2: 사건 현장 단서 찾기 -->
+        <!-- CHAPTER 2: 사건 현장 단서 찾기 및 드래그 앤 드롭 분류 -->
         <section id="panel-chapter2" class="hidden my-4 flex flex-col">
             <div class="mb-4">
-                <span class="bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider csi-font">CHAPTER 2</span>
-                <h2 class="text-2xl md:text-3xl font-extrabold text-white mt-1">현장 DNA 증거 분류</h2>
-                <p class="text-zinc-400 text-xs md:text-sm mt-1">증거들을 DNA 분석 적합도에 따라 분류하세요. (드래그 또는 터치하여 영역으로 분류하세요.)</p>
+                <span class="bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full csi-font">CHAPTER 2</span>
+                <h2 class="text-xl md:text-2xl font-black text-white mt-1">현장 DNA 증거 분류</h2>
+                <p class="text-zinc-500 text-[11px] mt-1">카드를 터치한 뒤 옮길 적합도 박스를 터치하세요. (마우스 드래그도 가능합니다.)</p>
             </div>
 
-            <div onclick="openImageZoom('https://lh3.googleusercontent.com/d/1won-C3_eB68TzIt5GXXaC3mHXesaJrr0')" class="relative bg-zinc-950 border-2 border-zinc-800 rounded-2xl overflow-hidden p-3 flex items-center justify-center min-h-[160px] cursor-zoom-in group mb-6 shrink-0">
+            <!-- 복원된 사건 주방 이미지 영역 -->
+            <div onclick="openImageZoom('https://lh3.googleusercontent.com/d/1won-C3_eB68TzIt5GXXaC3mHXesaJrr0')" class="relative bg-zinc-950 border-2 border-zinc-800 rounded-2xl overflow-hidden p-3 flex items-center justify-center min-h-[160px] max-h-[220px] cursor-zoom-in group mb-4 shrink-0">
                 <img src="https://lh3.googleusercontent.com/d/1won-C3_eB68TzIt5GXXaC3mHXesaJrr0" class="max-h-[200px] w-auto object-contain opacity-90 rounded-lg">
-                <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                     <span class="bg-black/80 text-yellow-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-yellow-500/50">🔍 현장 이미지 확대</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <!-- Zone Highly -->
-                <div id="zone-highly" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'highly')" class="drop-zone border-2 border-dashed border-green-500/30 bg-green-500/[0.02] p-4 rounded-2xl min-h-[140px] flex flex-col">
-                    <h4 class="text-green-400 font-extrabold text-sm mb-2">🟩 매우 적합</h4>
+            <!-- 3대 분류 영역 드롭 존 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                <div id="zone-highly" onclick="moveSelectedTo('highly')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'highly')" class="drop-zone border-2 border-dashed border-green-500/30 bg-green-500/[0.03] p-3 rounded-xl min-h-[110px] flex flex-col">
+                    <h4 class="text-green-400 font-black text-xs mb-2">🟩 매우 적합</h4>
                     <div id="highly-container" class="flex-grow space-y-2"></div>
                 </div>
-                <!-- Zone Suitable -->
-                <div id="zone-suitable" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'suitable')" class="drop-zone border-2 border-dashed border-blue-500/30 bg-blue-500/[0.02] p-4 rounded-2xl min-h-[140px] flex flex-col">
-                    <h4 class="text-blue-400 font-extrabold text-sm mb-2">🟦 적합</h4>
+                <div id="zone-suitable" onclick="moveSelectedTo('suitable')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'suitable')" class="drop-zone border-2 border-dashed border-blue-500/30 bg-blue-500/[0.03] p-3 rounded-xl min-h-[110px] flex flex-col">
+                    <h4 class="text-blue-400 font-black text-xs mb-2">🟦 적합</h4>
                     <div id="suitable-container" class="flex-grow space-y-2"></div>
                 </div>
-                <!-- Zone Low -->
-                <div id="zone-low" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'low')" class="drop-zone border-2 border-dashed border-yellow-500/30 bg-yellow-500/[0.02] p-4 rounded-2xl min-h-[140px] flex flex-col">
-                    <h4 class="text-yellow-400 font-extrabold text-sm mb-2">🟨 우선순위 낮음</h4>
+                <div id="zone-low" onclick="moveSelectedTo('low')" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'low')" class="drop-zone border-2 border-dashed border-yellow-500/30 bg-yellow-500/[0.03] p-3 rounded-xl min-h-[110px] flex flex-col">
+                    <h4 class="text-yellow-400 font-black text-xs mb-2">🟨 우선순위 낮음</h4>
                     <div id="low-container" class="flex-grow space-y-2"></div>
                 </div>
             </div>
 
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                <div id="source-pool" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"></div>
-                <div class="flex justify-center border-t border-zinc-800 pt-5">
-                    <button id="btn-submit-nfs" onclick="playClickSound(); submitNfsEvidence();" class="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-10 py-3.5 rounded-xl transition-all shadow-lg">🧬 감정 의뢰하기</button>
-                    <button id="btn-show-report" onclick="playClickSound(); showAnalysisReport();" class="hidden bg-green-500 hover:bg-green-400 text-black font-extrabold px-10 py-3.5 rounded-xl transition-all animate-pulse">📊 분석 결과 리포트 확인</button>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                <div id="source-pool" onclick="moveSelectedTo('pool')" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 min-h-[80px]"></div>
+                <div class="flex flex-col gap-2">
+                    <button id="btn-submit-nfs" onclick="playClickSound(); submitNfsEvidence();" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-3 rounded-lg text-sm transition-all">🧬 감정 의뢰하기</button>
+                    <button id="btn-show-report" onclick="playClickSound(); showAnalysisReport();" class="hidden w-full bg-green-600 hover:bg-green-500 text-white font-black py-3 rounded-lg text-sm animate-pulse">📊 분석 리포트 확인하기 ➔</button>
                 </div>
             </div>
         </section>
 
         <!-- CHAPTER 2 REPORT: 분석 완료 리포트 화면 -->
         <section id="panel-report" class="hidden my-4 max-w-4xl mx-auto animate-in fade-in duration-500">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-black text-white">📊 증거 분석 리포트</h2>
-                <p class="text-zinc-400 mt-2">각 증거가 분류된 과학적 이유를 확인하세요.</p>
+            <div class="text-center mb-6">
+                <h2 class="text-2xl md:text-3xl font-black text-center text-white">📊 증거 분석 리포트</h2>
+                <p class="text-zinc-500 text-xs mt-1">각 증거의 감정 결과를 학습하고 해독 과정으로 진행하세요.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 overflow-y-auto max-h-[500px] pr-2">
-                <div class="space-y-4">
-                    <div class="bg-green-500/20 border border-green-500/50 p-4 rounded-xl">
-                        <h4 class="text-green-400 font-bold mb-3">🟩 매우 적합</h4>
-                        <div id="report-highly" class="text-xs space-y-3"></div>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 overflow-y-auto max-h-[60vh] px-2">
+                <div class="bg-green-900/10 border border-green-500/30 p-3 rounded-xl">
+                    <h4 class="text-green-400 font-bold text-sm mb-3">🟩 매우 적합</h4>
+                    <div id="report-highly" class="space-y-3"></div>
                 </div>
-                <div class="space-y-4">
-                    <div class="bg-blue-500/20 border border-blue-500/50 p-4 rounded-xl">
-                        <h4 class="text-blue-400 font-bold mb-3">🟦 적합</h4>
-                        <div id="report-suitable" class="text-xs space-y-3"></div>
-                    </div>
+                <div class="bg-blue-900/10 border border-blue-500/30 p-3 rounded-xl">
+                    <h4 class="text-blue-400 font-bold text-sm mb-3">🟦 적합</h4>
+                    <div id="report-suitable" class="space-y-3"></div>
                 </div>
-                <div class="space-y-4">
-                    <div class="bg-yellow-500/10 border border-yellow-500/40 p-4 rounded-xl">
-                        <h4 class="text-yellow-400 font-bold mb-3">🟨 우선순위 낮음</h4>
-                        <div id="report-low" class="text-xs space-y-3"></div>
-                    </div>
+                <div class="bg-yellow-900/10 border border-yellow-500/30 p-3 rounded-xl">
+                    <h4 class="text-yellow-400 font-bold text-sm mb-3">🟨 우선순위 낮음</h4>
+                    <div id="report-low" class="space-y-3"></div>
                 </div>
             </div>
-            <div class="text-center">
-                <button onclick="playClickSound(); nextChapter(3);" class="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-12 py-4 rounded-xl text-lg shadow-lg">확인 완료 ➔</button>
-            </div>
+            <button onclick="playClickSound(); nextChapter(3);" class="w-full bg-yellow-500 text-black font-black py-4 rounded-xl text-lg shadow-lg">과학수사관 확인 완료 ➔</button>
         </section>
 
-        <!-- CHAPTER 3: 밀가루 암호 해독 및 탐구 안내 -->
+        <!-- CHAPTER 3: 밀가루 암호 해독 및 실험 가이드 -->
         <section id="panel-chapter3" class="hidden max-w-4xl mx-auto my-4 space-y-6">
             <div id="cipher-experiment-manual">
                 <div class="text-center mb-6">
                     <span class="bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full csi-font">CHAPTER 3</span>
-                    <h2 class="text-3xl font-black text-white mt-2">밀가루 암호 해독</h2>
+                    <h2 class="text-2xl font-black text-white mt-2">밀가루 암호 해독 실험</h2>
                 </div>
-                <div class="bg-zinc-900 border-2 border-yellow-500 rounded-2xl p-6 md:p-8 flex flex-col items-center gap-6">
-                    <div class="relative bg-zinc-200 w-full max-w-sm p-6 rounded-lg aspect-[4/3] border-4 border-zinc-300 flex flex-col justify-center items-center shadow-inner">
-                        <svg class="w-24 h-24 text-zinc-950 opacity-20" fill="currentColor" viewBox="0 0 24 24"><path d="M11.5 2c-.83 0-1.5.67-1.5 1.5v7h-1v-5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v6.5h-1v-4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v6c0 4.14 3.36 7.5 7.5 7.5s7.5-3.36 7.5-7.5V6.5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v5.5h-1v-7c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v7h-1V3.5c0-.83-.67-1.5-1.5-1.5z"/></svg>
-                        <p class="absolute text-zinc-800 font-bold text-lg blur-text select-none">❔❓ 〰️▪️❔</p>
-                        <div class="absolute bottom-4 right-4 text-[10px] text-zinc-500 font-mono tracking-widest">CONFIDENTIAL</div>
+                <div class="bg-zinc-900 border-2 border-yellow-500 rounded-2xl p-5 mb-6">
+                    <div class="bg-zinc-200 w-full aspect-[4/3] max-w-sm mx-auto rounded-lg border-4 border-zinc-400 flex flex-col justify-center items-center relative mb-6">
+                        <p class="text-zinc-800 font-black text-2xl blur-text select-none">❔❓ 〰️▪️❔</p>
+                        <span class="absolute bottom-2 right-2 text-[8px] text-zinc-400 font-mono">SPECIMEN NO. K-502</span>
                     </div>
-
-                    <!-- 복원된 4단계 대형 탐구 가이드 라인 매뉴얼 영역 -->
-                    <div class="w-full bg-zinc-950 rounded-xl p-5 border border-zinc-800 text-sm text-zinc-300 space-y-5 text-left">
+                    
+                    <div class="w-full bg-zinc-950 rounded-xl p-5 border border-zinc-800 text-xs md:text-sm text-zinc-300 space-y-4 text-left">
                         <div class="border-b border-zinc-800 pb-2.5 flex items-center gap-2">
-                            <span class="bg-yellow-500 text-black text-[11px] font-bold px-2 py-0.5 rounded tracking-wide">LAB MANUAL</span>
-                            <h4 class="text-white font-extrabold text-base">🔬 [현장 연계] 밀가루 암호 검출 실험 안내</h4>
+                            <span class="bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded tracking-wide">LAB MANUAL</span>
+                            <h4 class="text-white font-extrabold text-xs md:text-sm">🔬 [현장 연계] 밀가루 암호 검출 실험 안내</h4>
                         </div>
 
-                        <!-- 1. 탐구 목표 -->
                         <div>
-                            <h5 class="text-yellow-400 font-bold flex items-center gap-1.5 mb-1 text-xs md:text-sm">
-                                <span class="inline-block w-1.5 h-3.5 bg-yellow-500"></span>
-                                1. 탐구 목표 (Object)
-                            </h5>
-                            <p class="text-zinc-300 text-xs md:text-sm pl-4">
-                                전분(당)과 아스코르빈산, 요오드의 성질을 이해한다.
+                            <h5 class="text-yellow-400 font-bold mb-1 text-xs md:text-sm">1. 탐구 목표 (Object)</h5>
+                            <p class="text-zinc-300 pl-2">전분(당)과 아스코르빈산, 요오드의 화학적 성질을 이해한다.</p>
+                        </div>
+
+                        <div>
+                            <h5 class="text-yellow-400 font-bold mb-1 text-xs md:text-sm">2. 탐구 배경 (Background)</h5>
+                            <p class="text-zinc-300 pl-2 leading-relaxed">
+                                요오드는 밀가루의 전분과 만나면 청록색으로 변하지만, 비타민 C를 떨어뜨리면 무색 화합물을 생성하는 환원 작용이 발생합니다.
                             </p>
                         </div>
 
-                        <!-- 2. 탐구 배경 -->
                         <div>
-                            <h5 class="text-yellow-400 font-bold flex items-center gap-1.5 mb-1 text-xs md:text-sm">
-                                <span class="inline-block w-1.5 h-3.5 bg-yellow-500"></span>
-                                2. 탐구 배경 (Background)
-                            </h5>
-                            <p class="text-zinc-300 text-xs md:text-sm pl-4 leading-relaxed">
-                                요오드는 밀가루에 들어있는 전분과 반응하여 검은색에 가까운 <span class="text-yellow-500 font-semibold">청록색</span>으로 변하게 된다. 하지만 레몬즙을 그 위에 떨어뜨리면 요오드와 전분의 결합이 떨어지고, 요오드는 레몬즙에 함유되어 있는 아스코르빈산(비타민 C)과 화합한다. 그 결과 <span class="text-white font-semibold">색깔 없는 새로운 화합물</span>이 생겨나게 된다.
-                            </p>
+                            <h5 class="text-yellow-400 font-bold mb-1 text-xs md:text-sm">3. 준비물 (Material)</h5>
+                            <p class="text-zinc-300 pl-2">밀가루용액, 요오드-요오드화칼륨용액, 비타민용액, 접시, 종이, 면봉 등</p>
                         </div>
 
-                        <!-- 3. 준비물 -->
                         <div>
-                            <h5 class="text-yellow-400 font-bold flex items-center gap-1.5 mb-1 text-xs md:text-sm">
-                                <span class="inline-block w-1.5 h-3.5 bg-yellow-500"></span>
-                                3. 준비물 (Material)
-                        </h5>
-                            <p class="text-zinc-300 text-xs md:text-sm pl-4">
-                                밀가루, 물, 요오드-요오드화칼륨용액, 비타민용액, 접시, 종이, 면봉, 햇빛 또는 드라이기 (별도)
-                            </p>
-                        </div>
-
-                        <!-- 4. 실험 과정 -->
-                        <div>
-                            <h5 class="text-yellow-400 font-bold flex items-center gap-1.5 mb-2 text-xs md:text-sm">
-                                <span class="inline-block w-1.5 h-3.5 bg-yellow-500"></span>
-                                4. 실험 과정(Method)
-                            </h5>
-                            <ol class="text-zinc-300 text-xs md:text-sm pl-4 space-y-1.5 list-decimal list-inside">
-                                <li>물에 밀가루를 넣어 흔들어준다.</li>
-                                <li>밀가루 용액을 사용 전에 흔들어 면봉으로 충분히 찍어서 종이에 암호를 적는다.</li>
-                                <li>암호가 적힌 종이를 접시에 올려 말린다.</li>
-                                <li>말린 종이에 요오드-요오드화칼륨 용액을 2~3번 눌러 떨어트려 살짝 적신 후 말린다.</li>
-                                <li>서서히 나타나는 암호를 확인한다.</li>
-                                <li>암호를 확인한 후 다시 비타민 용액을 2~3번 눌러 떨어트려 적신 후 변화를 관찰한다.</li>
+                            <h5 class="text-yellow-400 font-bold mb-1 text-xs md:text-sm">4. 실험 과정 (Method)</h5>
+                            <ol class="pl-5 space-y-1 list-decimal list-inside text-zinc-300">
+                                <li>밀가루 용액을 면봉에 묻혀 종이에 비밀 메시지를 적은 후 말린다.</li>
+                                <li>요오드 용액을 골고루 떨어뜨려 말린 후, 서서히 전개되는 문자 흔적을 탐지한다.</li>
+                                <li>메시지 흔적 확인 완료 시 비타민 용액을 가볍게 떨어뜨려 전분 결합 색상 제거를 대조한다.</li>
                             </ol>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 범인 지목부 (각 인물의 손 정보 및 흉터 특징 복원 적용) -->
-            <div class="bg-zinc-900 border-2 border-red-500/50 rounded-2xl p-6 md:p-8">
-                <h3 class="text-xl font-black text-white mb-4 text-center">🚨 범인 최종 지목</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div id="culprit-card-1" onclick="selectCulprit(1);" class="bg-zinc-950 border-2 border-zinc-800 p-4 rounded-xl cursor-pointer hover:border-yellow-500 transition-all flex flex-col justify-between">
-                        <div>
-                            <span class="text-[9px] text-zinc-500 font-mono block mb-1">SUSPECT 1</span>
-                            <h4 class="text-white text-xs font-black mb-2">이준호 (20)</h4>
-                        </div>
-                        <p class="text-zinc-400 text-[10px] leading-relaxed border-t border-zinc-800 pt-2">왼손 엄지손가락에 깊게 베인 상처가 있다.</p>
-                    </div>
-                    <div id="culprit-card-2" onclick="selectCulprit(2);" class="bg-zinc-950 border-2 border-zinc-800 p-4 rounded-xl cursor-pointer hover:border-yellow-500 transition-all flex flex-col justify-between">
-                        <div>
-                            <span class="text-[9px] text-zinc-500 font-mono block mb-1">SUSPECT 2</span>
-                            <h4 class="text-white text-xs font-black mb-2">최유진 (29)</h4>
-                        </div>
-                        <p class="text-zinc-400 text-[10px] leading-relaxed border-t border-zinc-800 pt-2">오른손 약지에 은색 반지를 항상 착용한다.</p>
-                    </div>
-                    <div id="culprit-card-3" onclick="selectCulprit(3);" class="bg-zinc-950 border-2 border-zinc-800 p-4 rounded-xl cursor-pointer hover:border-yellow-500 transition-all flex flex-col justify-between">
-                        <div>
-                            <span class="text-[9px] text-zinc-500 font-mono block mb-1">SUSPECT 3</span>
-                            <h4 class="text-white text-xs font-black mb-2">강성호 (52)</h4>
-                        </div>
-                        <p class="text-zinc-400 text-[10px] leading-relaxed border-t border-zinc-800 pt-2">오른손 검지에 오븐 화상 흉터가 있다.</p>
-                    </div>
-                    <div id="culprit-card-4" onclick="selectCulprit(4);" class="bg-zinc-950 border-2 border-zinc-800 p-4 rounded-xl cursor-pointer hover:border-yellow-500 transition-all flex flex-col justify-between">
-                        <div>
-                            <span class="text-[9px] text-zinc-500 font-mono block mb-1">SUSPECT 4</span>
-                            <h4 class="text-white text-xs font-black mb-2">박정우 (41)</h4>
-                        </div>
-                        <p class="text-zinc-400 text-[10px] leading-relaxed border-t border-zinc-800 pt-2">손목에 밀가루 포대를 옮기다 생긴 긴 흉터가 있다.</p>
-                    </div>
-                </div>
-                <button onclick="attemptArrest();" class="w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-lg shadow-lg">🚔 범인 체포 구속 집행</button>
+            <!-- 범인 지목 지판 -->
+            <div class="bg-zinc-900 border-2 border-red-500/40 rounded-2xl p-5">
+                <h3 class="text-lg font-black text-white text-center mb-4">🚨 범인 최종 지목</h3>
+                <div id="culprit-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"></div>
+                <button onclick="attemptArrest();" class="w-full bg-red-600 hover:bg-red-500 text-white font-black py-4 rounded-xl text-lg shadow-xl">🚔 범인 체포 구속 집행</button>
             </div>
         </section>
 
         <!-- CHAPTER 4: 사건의 전말 -->
-        <section id="panel-final" class="hidden max-w-4xl mx-auto my-4 space-y-6 text-center">
-            <div class="bg-zinc-900 border-2 border-green-500 rounded-2xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
-                <div class="mb-8 border-b border-zinc-800 pb-6">
-                    <h2 class="text-3xl md:text-4xl font-black text-white">사건 해결 완료! 🎉</h2>
-                    <p class="text-green-400 font-bold mt-2">진범 : 아르바이트생 이준호</p>
-                </div>
-                <!-- 스토리 전말을 담은 대형 이미지 수록 (클릭하여 확대 뷰어 연결) -->
-                <div onclick="openImageZoom('https://lh3.googleusercontent.com/d/1DlNXwZcMJ4cFH48aqo6t1FccN9uFOTCw')" class="max-w-2xl mx-auto mb-8 bg-black p-2 rounded-xl border border-zinc-800 cursor-zoom-in group relative">
-                    <img src="https://lh3.googleusercontent.com/d/1DlNXwZcMJ4cFH48aqo6t1FccN9uFOTCw" alt="사건의 전말" class="w-full rounded-lg">
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                        <span class="bg-black/80 text-yellow-400 px-4 py-2 rounded-full text-sm font-bold">🔍 크게 보기</span>
+        <section id="panel-final" class="hidden max-w-4xl mx-auto my-4 text-center">
+            <div class="bg-zinc-900 border-2 border-green-500 rounded-2xl p-6 md:p-10 shadow-2xl relative">
+                <h2 class="text-3xl font-black text-white mb-2">사건 해결 완료! 🎉</h2>
+                <p class="text-green-400 font-bold mb-6">진범 : 아르바이트생 이준호 검거</p>
+                
+                <div onclick="openImageZoom('https://lh3.googleusercontent.com/d/1DlNXwZcMJ4cFH48aqo6t1FccN9uFOTCw')" class="max-w-2xl mx-auto mb-8 bg-black p-1 rounded-xl border border-zinc-800 cursor-zoom-in relative">
+                    <img src="https://lh3.googleusercontent.com/d/1DlNXwZcMJ4cFH48aqo6t1FccN9uFOTCw" class="w-full rounded-lg shadow-2xl">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity">
+                        <span class="bg-black/80 text-yellow-400 px-4 py-2 rounded-full text-xs">🔍 상세히 보기</span>
                     </div>
                 </div>
-                <div class="bg-yellow-500/10 border-2 border-yellow-500/40 rounded-xl p-8 space-y-4">
-                    <p class="text-white font-extrabold text-xl">"과학 수사로 진실은 반드시 드러납니다."</p>
-                    <p class="text-zinc-300 text-sm leading-relaxed">
+
+                <div class="bg-yellow-500/10 border-2 border-yellow-500/40 rounded-xl p-6 mb-6">
+                    <p class="text-white font-black text-lg mb-2">"과학 수사로 진실은 반드시 드러납니다."</p>
+                    <p class="text-zinc-400 text-sm leading-relaxed text-center">
                         아주 작은 세포 하나, 손끝에 스친 DNA의 흔적조차 결코 숨길 수 없습니다.<br>
-                        여러분이 발견해 낸 명확한 과학적 분석 증거들이 억울한 피해자의 어두운 진실을 밝게 비춰주었습니다.
+                        여러분이 발견해 낸 명확한 과학적 분석 증거들이 억울한 피해자의 진실을 밝혀주었습니다.
                     </p>
                 </div>
-                <button onclick="playClickSound(); location.reload();" class="mt-8 bg-zinc-800 text-white px-8 py-4 rounded-xl font-bold">처음으로 🚔</button>
+                <button onclick="location.reload();" class="bg-zinc-800 text-white px-8 py-3 rounded-lg font-bold">처음으로 돌아가기 🚔</button>
             </div>
         </section>
+
     </main>
 
-    <!-- 이미지 확대 모달 -->
-    <div id="modal-image-zoom" class="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-[100] hidden">
-        <button onclick="closeImageZoom();" class="absolute top-6 right-6 text-white bg-zinc-800 rounded-full p-2 hover:bg-red-500">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-        <img id="zoomed-img" src="" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+    <!-- 이미지 확대 팝업 -->
+    <div id="modal-image-zoom" onclick="closeImageZoom()" class="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-[100] hidden">
+        <img id="zoomed-img" src="" class="max-w-full max-h-full object-contain rounded shadow-2xl">
+        <div class="absolute top-4 right-4 text-white text-3xl font-black cursor-pointer">&times;</div>
     </div>
 
-    <!-- 과학 감식 팝업용 일반 모달 -->
+    <!-- 범인 검거 정오답 알림 모달 -->
     <div id="modal-clue" class="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-[60] hidden">
         <div class="bg-zinc-900 border-2 border-yellow-500 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl animate-in zoom-in duration-200">
             <div class="yellow-tape h-3.5 w-full"></div>
@@ -419,15 +309,10 @@
     </div>
 
     <script>
+        let selectedClueKey = null;
         let currentSelectedCulprit = null;
         let lockedClues = new Set();
         let cluePlacements = {};
-        
-        const correctMapping = {
-            'highly': ['apron', 'toothbrush', 'cigarette'],
-            'suitable': ['mask', 'cup', 'gloves', 'comb', 'swab'],
-            'low': ['crime-scene', 'cash', 'white-paper', 'roller']
-        };
 
         const db = {
             'apron': { label: '🩸 피 묻은 앞치마', cat: 'highly', d: '혈액에는 많은 세포가 들어 있어 DNA를 얻기에 가장 적합한 증거입니다. 실제 과학수사에서도 중요한 DNA 증거로 사용됩니다.' },
@@ -437,78 +322,113 @@
             'cup': { label: '☕ 커피컵', cat: 'suitable', d: '컵을 마실 때 침과 입안의 상피세포가 묻을 수 있어 DNA 분석이 가능합니다.' },
             'gloves': { label: '🧤 빵 반죽용 장갑', cat: 'suitable', d: '장갑 안쪽에는 손에서 떨어진 피부세포가 남아 있을 수 있어 DNA를 분석할 수 있습니다.' },
             'comb': { label: '🪮 머리빗', cat: 'suitable', d: '머리카락 뿌리가 함께 있다면 DNA를 분석할 수 있습니다.' },
-            'swab': { label: '🧪 면봉', cat: 'suitable', d: '면봉에 혈액이나 침이 묻어 있다면 DNA를 분석할 수 있습니다. 현장에서는 중요한 증거입니다.' },
-            'crime-scene': { label: '📍 사건 위치', cat: 'low', d: '장소 자체보다 현장에 남은 생물학적 흔적(혈흔 등)에서 DNA를 분석합니다.' },
-            'cash': { label: '💰 현금 봉투', cat: 'low', d: '여러 사람이 만졌을 가능성이 있어 범인을 특정하기 어렵습니다.' },
-            'white-paper': { label: '📄 밀가루 묻은 흰 종이', cat: 'low', d: 'DNA 가치는 낮지만, 피해자가 남긴 중요한 단서가 숨어 있을 수 있습니다.' },
-            'roller': { id: 'roller', label: '🪵 빵 반죽용 밀대', cat: 'low', d: '여러 사람이 함께 사용하는 도구라 범인을 특정하기에는 어렵습니다.' }
+            'swab': { label: '🧪 면봉', cat: 'suitable', d: '면봉에 혈액이나 침이 묻어 있다면 DNA를 분석할 수 있습니다. 사건 현장에서는 중요한 증거가 될 수 있습니다.' },
+            'crime-scene': { label: '📍 사건 위치', cat: 'low', d: '사건 현장은 중요하지만, 장소 자체보다 현장에 남은 혈흔이나 머리카락 같은 생물학적 흔적에서 DNA를 분석합니다.' },
+            'cash': { label: '💰 현금 봉투', cat: 'low', d: '현금 봉투에도 피부세포가 남을 수 있지만 여러 사람이 만졌을 가능성이 있어 범인을 특정하기 어렵습니다.' },
+            'white-paper': { label: '📄 밀가루 묻은 흰 종이', cat: 'low', d: 'DNA 증거로서의 가치는 낮지만, 피해자가 남긴 중요한 단서가 숨어 있을 수 있습니다.' },
+            'roller': { label: '🪵 빵 반죽용 밀대', cat: 'low', d: '피부세포가 남을 수 있지만 여러 사람이 함께 사용하는 도구라 범인을 특정하기에는 어렵습니다.' }
         };
 
+        const suspects = [
+            { id: 1, name: '이준호 (20)', info: '왼손 엄지손가락에 깊게 베인 상처가 있다.' },
+            { id: 2, name: '최유진 (29)', info: '오른손 약지에 은색 반지를 항상 착용한다.' },
+            { id: 3, name: '강성호 (52)', info: '오른손 검지에 오븐 화상 흉터가 있다.' },
+            { id: 4, name: '박정우 (41)', info: '손목에 밀가루 포대를 옮기다 생긴 긴 흉터가 있다.' }
+        ];
+
         function nextChapter(n) {
-            playClickSound();
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
             if (n === 1) document.getElementById('panel-chapter1').classList.remove('hidden');
-            else if (n === 2) { document.getElementById('panel-chapter2').classList.remove('hidden'); initCh2(); }
-            else if (n === 3) document.getElementById('panel-chapter3').classList.remove('hidden');
-            else if (n === 4) document.getElementById('panel-final').classList.remove('hidden');
+            if (n === 2) { document.getElementById('panel-chapter2').classList.remove('hidden'); initCh2(); }
+            if (n === 3) { document.getElementById('panel-chapter3').classList.remove('hidden'); initCh3(); }
+            if (n === 4) document.getElementById('panel-final').classList.remove('hidden');
             window.scrollTo(0,0);
         }
 
         function openImageZoom(url) {
-            const m = document.getElementById('modal-image-zoom');
-            const zoomedImg = document.getElementById('zoomed-img');
-            if (zoomedImg) zoomedImg.src = url;
-            if (m) m.classList.remove('hidden');
+            document.getElementById('zoomed-img').src = url;
+            document.getElementById('modal-image-zoom').classList.remove('hidden');
         }
-        function closeImageZoom() { 
-            const m = document.getElementById('modal-image-zoom');
-            if (m) m.classList.add('hidden'); 
-        }
+        function closeImageZoom() { document.getElementById('modal-image-zoom').classList.add('hidden'); }
 
         function initCh2() {
             Object.keys(db).forEach(k => cluePlacements[k] = 'pool');
+            selectedClueKey = null;
             renderCards();
         }
 
         function renderCards() {
             ['pool', 'highly', 'suitable', 'low'].forEach(z => {
-                const container = document.getElementById(z === 'pool' ? 'source-pool' : z + '-container');
-                if (container) container.innerHTML = '';
+                const el = document.getElementById(z === 'pool' ? 'source-pool' : z + '-container');
+                if (el) el.innerHTML = '';
             });
+
             Object.keys(db).forEach(k => {
                 const card = document.createElement('div');
-                card.draggable = !lockedClues.has(k);
-                card.className = `p-3 rounded-lg text-xs font-bold border ${lockedClues.has(k) ? 'border-green-500 bg-green-500/10' : 'border-zinc-800 bg-zinc-950 cursor-grab active:cursor-grabbing'}`;
-                card.innerText = db[k].label + (lockedClues.has(k) ? ' 🔒' : '');
-                card.ondragstart = (e) => e.dataTransfer.setData('key', k);
+                const isLocked = lockedClues.has(k);
+                card.className = `p-2.5 rounded-lg text-[11px] font-bold border transition-all ${isLocked ? 'border-green-500 bg-green-500/10 text-green-400' : 'border-zinc-700 bg-zinc-950 text-white cursor-pointer hover:border-yellow-500/30'}`;
+                if (selectedClueKey === k) card.classList.add('selected-card');
+                card.innerText = db[k].label + (isLocked ? ' 🔒' : '');
                 
-                const targetZone = cluePlacements[k] === 'pool' ? 'source-pool' : cluePlacements[k] + '-container';
-                const container = document.getElementById(targetZone);
-                if (container) container.appendChild(card);
+                if (!isLocked) {
+                    card.onclick = (e) => { e.stopPropagation(); selectClue(k); };
+                    card.draggable = true;
+                    card.ondragstart = (e) => { selectedClueKey = k; };
+                }
+
+                const target = document.getElementById(cluePlacements[k] === 'pool' ? 'source-pool' : cluePlacements[k] + '-container');
+                if (target) target.appendChild(card);
             });
+
             const scoreDisplay = document.getElementById('score-display');
-            if (scoreDisplay) {
-                scoreDisplay.innerText = `${lockedClues.size} / 12 분석 완료`;
+            if (scoreDisplay) scoreDisplay.innerText = `분석완료: ${lockedClues.size}/12`;
+        }
+
+        function selectClue(k) {
+            playClickSound();
+            selectedClueKey = (selectedClueKey === k) ? null : k;
+            renderCards();
+        }
+
+        function moveSelectedTo(zone) {
+            if (selectedClueKey && !lockedClues.has(selectedClueKey)) {
+                playClickSound();
+                cluePlacements[selectedClueKey] = zone;
+                selectedClueKey = null;
+                renderCards();
             }
         }
 
         function allowDrop(e) { e.preventDefault(); }
         function handleDrop(e, zone) {
             e.preventDefault();
-            const k = e.dataTransfer.getData('key');
-            if (!lockedClues.has(k)) { cluePlacements[k] = zone; playClickSound(); renderCards(); }
+            if (selectedClueKey) moveSelectedTo(zone);
         }
 
         function submitNfsEvidence() {
             let newlyMatched = 0;
+            let unclassifiedCount = 0;
+
             Object.keys(cluePlacements).forEach(k => {
-                if (!lockedClues.has(k) && cluePlacements[k] !== 'pool') {
+                if (cluePlacements[k] === 'pool') unclassifiedCount++;
+            });
+
+            if (unclassifiedCount > 0) {
+                playFailSound();
+                alert(`⚠️ 분류가 덜 끝났습니다.\n\n아직 분류하지 않은 카드가 ${unclassifiedCount}개 남아 있습니다!`);
+                return;
+            }
+
+            Object.keys(cluePlacements).forEach(k => {
+                if (!lockedClues.has(k)) {
                     if (cluePlacements[k] === db[k].cat) { lockedClues.add(k); newlyMatched++; }
                     else { cluePlacements[k] = 'pool'; }
                 }
             });
+
             if (newlyMatched > 0) playSuccessSound(); else playFailSound();
             renderCards();
+
             if (lockedClues.size === 12) {
                 const btnSubmit = document.getElementById('btn-submit-nfs');
                 const btnReport = document.getElementById('btn-show-report');
@@ -521,35 +441,52 @@
             document.getElementById('panel-chapter2').classList.add('hidden');
             document.getElementById('panel-report').classList.remove('hidden');
             ['highly', 'suitable', 'low'].forEach(cat => {
-                const container = document.getElementById('report-' + cat);
-                if (container) {
-                    container.innerHTML = '';
+                const cont = document.getElementById('report-' + cat);
+                if (cont) {
+                    cont.innerHTML = '';
                     Object.keys(db).filter(k => db[k].cat === cat).forEach(k => {
                         const item = document.createElement('div');
-                        item.className = 'bg-black/30 p-3 rounded-lg border border-white/10';
-                        item.innerHTML = `<div class="font-bold text-white mb-1">${db[k].label}</div><div class="text-[10px] leading-normal text-zinc-400">${db[k].d}</div>`;
-                        container.appendChild(item);
+                        item.className = 'bg-black/40 p-3 rounded-lg border border-white/5';
+                        item.innerHTML = `<div class='text-white font-bold text-xs mb-1'>${db[k].label}</div><div class='text-[10px] text-zinc-400 leading-normal'>${db[k].d}</div>`;
+                        cont.appendChild(item);
                     });
                 }
             });
         }
 
-        function selectCulprit(id) {
-            playClickSound(); currentSelectedCulprit = id;
-            for(let i=1; i<=4; i++) {
-                const card = document.getElementById(`culprit-card-${i}`);
-                if (card) {
-                    card.className = (i===id) 
-                        ? 'bg-red-900/20 border-2 border-red-500 p-4 rounded-xl cursor-pointer transition-all flex flex-col justify-between' 
-                        : 'bg-zinc-950 border-2 border-zinc-800 p-4 rounded-xl cursor-pointer hover:border-yellow-500 transition-all flex flex-col justify-between';
-                }
+        function initCh3() {
+            const grid = document.getElementById('culprit-grid');
+            if (grid) {
+                grid.innerHTML = '';
+                suspects.forEach(s => {
+                    const card = document.createElement('div');
+                    card.id = `culprit-card-${s.id}`;
+                    card.onclick = () => { playClickSound(); currentSelectedCulprit = s.id; updateCulpritUI(); };
+                    card.className = 'bg-zinc-950 border-2 border-zinc-800 p-3 rounded-xl cursor-pointer transition-all flex flex-col justify-between min-h-[100px]';
+                    card.innerHTML = `<div class="text-[9px] text-zinc-500 font-mono mb-1">SUSPECT 0${s.id}</div><div class="text-white font-black text-xs mb-1">${s.name}</div><div class="text-[10px] text-zinc-500 leading-tight border-t border-zinc-800 pt-2">${s.info}</div>`;
+                    grid.appendChild(card);
+                });
             }
         }
 
+        function updateCulpritUI() {
+            suspects.forEach(s => {
+                const el = document.getElementById(`culprit-card-${s.id}`);
+                if (el) {
+                    el.className = (s.id === currentSelectedCulprit) 
+                        ? 'bg-red-900/20 border-2 border-red-500 p-3 rounded-xl cursor-pointer transition-all flex flex-col justify-between min-h-[100px]' 
+                        : 'bg-zinc-950 border-2 border-zinc-800 p-3 rounded-xl cursor-pointer transition-all flex flex-col justify-between min-h-[100px]';
+                }
+            });
+        }
+
         function attemptArrest() {
-            if (currentSelectedCulprit === 1) { playPoliceSirenLoop(); playSuccessSound(); setTimeout(() => nextChapter(4), 1500); }
-            else { 
-                playFailSound();
+            if (currentSelectedCulprit === 1) { 
+                playPoliceSirenLoop(); 
+                playSuccessSound(); 
+                setTimeout(() => nextChapter(4), 1500); 
+            } else { 
+                playFailSound(); 
                 const m = document.getElementById('modal-clue');
                 const content = document.getElementById('modal-content');
                 if (content) {
@@ -558,6 +495,7 @@
                 if (m) m.classList.remove('hidden');
             }
         }
+
         function closeModal() {
             const m = document.getElementById('modal-clue');
             if (m) m.classList.add('hidden');
